@@ -1,41 +1,84 @@
 @page "/weather"
+@rendermode InteractiveServer
 
 <PageTitle>Prakiraan Cuaca – BelajarGitBlazor</PageTitle>
 
-<div class="page-header">
-    <h1>Prakiraan Cuaca</h1>
-    <p>Demonstrasi rendering tabel dinamis dari data dengan gaya modern.</p>
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+    <div>
+        <h1 style="margin-bottom: 6px;">Prakiraan Cuaca</h1>
+        <p style="margin: 0;">Demonstrasi rendering tabel dinamis dari data dengan gaya modern.</p>
+    </div>
+    <button class="btn btn-primary" @onclick="RefreshDataAsync" disabled="@isLoading">
+        @if (isLoading)
+        {
+            <span class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></span>
+            <span style="margin-left: 8px;">Memuat...</span>
+        }
+        else
+        {
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            <span>Perbarui Data</span>
+        }
+    </button>
 </div>
 
 @if (forecasts == null)
 {
-    <div style="padding: 40px; text-align: center; color: var(--text-muted);">
-        <span class="spinner" style="margin-bottom: 16px;"></span>
+    <div style="padding: 60px; text-align: center; color: var(--text-muted);">
+        <span class="spinner" style="margin-bottom: 16px; width: 32px; height: 32px;"></span>
         <p>Memuat data cuaca...</p>
     </div>
 }
 else
 {
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-label">Suhu Rata-rata</div>
-            <div class="stat-value">@(Math.Round(forecasts.Average(f => f.TemperatureC)))°C</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Suhu Tertinggi</div>
-            <div class="stat-value" style="background: linear-gradient(135deg, var(--danger), var(--warning)); -webkit-background-clip: text; background-clip: text;">
-                @(forecasts.Max(f => f.TemperatureC))°C
+    <div class="stats-grid" style="margin-top: 10px;">
+        <div class="stat-card" style="display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden;">
+            <div style="width: 52px; height: 52px; border-radius: var(--radius-md); background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="stat-label">Suhu Rata-rata</div>
+                <div class="stat-value">@(Math.Round(forecasts.Average(f => f.TemperatureC)))°C</div>
             </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">Suhu Terendah</div>
-            <div class="stat-value" style="background: linear-gradient(135deg, var(--accent), var(--primary)); -webkit-background-clip: text; background-clip: text;">
-                @(forecasts.Min(f => f.TemperatureC))°C
+        
+        <div class="stat-card" style="display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden;">
+            <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, var(--warning), var(--danger));"></div>
+            <div style="width: 52px; height: 52px; border-radius: var(--radius-md); background: var(--warning-light); color: var(--warning); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/><circle cx="12" cy="12" r="4"/>
+                </svg>
+            </div>
+            <div>
+                <div class="stat-label">Suhu Tertinggi</div>
+                <div class="stat-value" style="background: linear-gradient(135deg, var(--danger), var(--warning)); -webkit-background-clip: text; background-clip: text;">
+                    @(forecasts.Max(f => f.TemperatureC))°C
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card" style="display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden;">
+            <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, var(--accent), var(--primary));"></div>
+            <div style="width: 52px; height: 52px; border-radius: var(--radius-md); background: rgba(6, 182, 212, 0.12); color: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 12h4l3-9 5 18 3-9h5"/>
+                </svg>
+            </div>
+            <div>
+                <div class="stat-label">Suhu Terendah</div>
+                <div class="stat-value" style="background: linear-gradient(135deg, var(--accent), var(--primary)); -webkit-background-clip: text; background-clip: text;">
+                    @(forecasts.Min(f => f.TemperatureC))°C
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="table-wrapper">
+    <div class="table-wrapper" style="opacity: @(isLoading ? "0.6" : "1"); transition: opacity 0.3s ease; pointer-events: @(isLoading ? "none" : "auto");">
         <table class="table">
             <thead>
                 <tr>
@@ -52,15 +95,39 @@ else
                     <tr>
                         <td style="font-weight: 600;">@forecast.Date.ToShortDateString()</td>
                         <td>
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <div style="width:40px; height:6px; background:var(--surface-alt); border-radius:4px; overflow:hidden;">
-                                    <div style="height:100%; width:@(forecast.TemperatureC * 100 / 40)%; background:var(--@(forecast.TemperatureC > 28 ? "danger" : forecast.TemperatureC < 23 ? "accent" : "primary"));"></div>
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div style="width:45px; height:6px; background:var(--surface-alt); border-radius:4px; overflow:hidden;">
+                                    @{
+                                        string barColor = forecast.TemperatureC > 28 ? "var(--danger)" : forecast.TemperatureC < 23 ? "var(--accent)" : "var(--primary)";
+                                        int widthPercent = Math.Clamp(forecast.TemperatureC * 100 / 40, 5, 100);
+                                    }
+                                    <div style="height:100%; width:@widthPercent%; background: linear-gradient(90deg, var(--primary-light), @barColor); border-radius: 4px;"></div>
                                 </div>
-                                @forecast.TemperatureC
+                                <span style="font-weight: 700;">@forecast.TemperatureC</span>
                             </div>
                         </td>
-                        <td style="color: var(--text-muted);">@forecast.TemperatureF</td>
-                        <td>@forecast.Summary</td>
+                        <td style="color: var(--text-muted); font-family: monospace; font-size: 0.95rem;">@forecast.TemperatureF</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap: 8px;">
+                                @if (forecast.Summary == "Cerah")
+                                {
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                                }
+                                else if (forecast.Summary == "Berawan" || forecast.Summary == "Mendung")
+                                {
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                                }
+                                else if (forecast.Summary == "Hujan Lebat" || forecast.Summary == "Hujan Ringan")
+                                {
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg>
+                                }
+                                else if (forecast.Summary == "Badai Petir")
+                                {
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"/><polyline points="13 11 9 17 15 17 11 23"/></svg>
+                                }
+                                <span style="font-weight: 500;">@forecast.Summary</span>
+                            </div>
+                        </td>
                         <td>
                             @if (forecast.TemperatureC > 28)
                             {
@@ -84,11 +151,26 @@ else
 
 @code {
     private WeatherForecast[]? forecasts;
+    private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadDataAsync();
+    }
+
+    private async Task RefreshDataAsync()
+    {
+        isLoading = true;
+        // Agar spinner langsung terlihat pada UI
+        StateHasChanged(); 
+        
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
         // Simulasi network delay
-        await Task.Delay(500);
+        await Task.Delay(600);
 
         var startDate = DateOnly.FromDateTime(DateTime.Now);
         var summaries = new[] { "Cerah", "Berawan", "Mendung", "Hujan Ringan", "Hujan Lebat", "Badai Petir" };
@@ -96,9 +178,11 @@ else
         forecasts = Enumerable.Range(0, 5).Select(index => new WeatherForecast
         {
             Date = startDate.AddDays(index),
-            TemperatureC = Random.Shared.Next(20, 35),
+            TemperatureC = Random.Shared.Next(15, 36),
             Summary = summaries[Random.Shared.Next(summaries.Length)]
         }).ToArray();
+
+        isLoading = false;
     }
 
     private class WeatherForecast
