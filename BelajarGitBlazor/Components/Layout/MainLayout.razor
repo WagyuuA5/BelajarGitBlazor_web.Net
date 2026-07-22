@@ -1,0 +1,20 @@
+@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row">
+            <span class="topbar-title">BelajarGit &mdash; Blazor &amp; Git Practice</span>
+            <span class="topbar-badge">Blazor Server</span>
+        </div>
+
+        <article class="content">
+            @Body
+        </article>
+    </main>
+</div>
+
+<ThemeToggle />

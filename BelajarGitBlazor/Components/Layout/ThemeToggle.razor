@@ -1,0 +1,94 @@
+@rendermode InteractiveServer
+@inject ThemeService ThemeService
+@inject IJSRuntime JS
+@implements IDisposable
+
+<button class="theme-fab" id="theme-fab-btn" @onclick="TogglePanel" title="Pengaturan Tampilan">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        <line x1="12" y1="2" x2="12" y2="4"/>
+        <line x1="12" y1="20" x2="12" y2="22"/>
+        <line x1="2" y1="12" x2="4" y2="12"/>
+        <line x1="20" y1="12" x2="22" y2="12"/>
+    </svg>
+</button>
+
+@if (_isOpen)
+{
+    <div class="theme-overlay" @onclick="ClosePanel"></div>
+
+    <div class="theme-panel" id="theme-settings-panel">
+        <div class="theme-panel-header">
+            <h3 class="theme-panel-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 2v2m0 16v2M2 12h2m16 0h2m-3.07-8.93-1.42 1.42M6.49 17.51l-1.42 1.42m14.04 0-1.42-1.42M6.49 6.49 5.07 5.07"/>
+                </svg>
+                Pengaturan Tema
+            </h3>
+            <button class="theme-panel-close" id="theme-close-btn" @onclick="ClosePanel">×</button>
+        </div>
+
+        <div class="theme-panel-body">
+            <p class="theme-section-label">Pilih Tema</p>
+            <div class="theme-options">
+                <button class="theme-option @(ThemeService.Current == "light" ? "is-active" : "")"
+                        id="btn-theme-light"
+                        @onclick='() => SetThemeAsync("light")'>
+                    <span class="theme-preview preview-light"></span>
+                    Light
+                </button>
+
+                <button class="theme-option @(ThemeService.Current == "dark" ? "is-active" : "")"
+                        id="btn-theme-dark"
+                        @onclick='() => SetThemeAsync("dark")'>
+                    <span class="theme-preview preview-dark"></span>
+                    Dark
+                </button>
+
+                <button class="theme-option @(ThemeService.Current == "purple" ? "is-active" : "")"
+                        id="btn-theme-purple"
+                        @onclick='() => SetThemeAsync("purple")'>
+                    <span class="theme-preview preview-purple"></span>
+                    Purple
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _isOpen = false;
+
+    protected override void OnInitialized()
+    {
+        ThemeService.OnChanged += StateHasChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var stored = await JS.InvokeAsync<string>("getStoredTheme");
+            ThemeService.Initialize(stored);
+            await JS.InvokeVoidAsync("setTheme", ThemeService.Current);
+            StateHasChanged();
+        }
+    }
+
+    private void TogglePanel() => _isOpen = !_isOpen;
+
+    private void ClosePanel() => _isOpen = false;
+
+    private async Task SetThemeAsync(string theme)
+    {
+        ThemeService.Set(theme);
+        await JS.InvokeVoidAsync("setTheme", theme);
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnChanged -= StateHasChanged;
+    }
+}

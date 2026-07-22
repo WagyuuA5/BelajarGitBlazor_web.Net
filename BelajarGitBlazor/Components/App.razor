@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="BelajarGitBlazor - Project Blazor untuk latihan Git dari pemula hingga pro." />
+    <base href="/" />
+    <title>BelajarGitBlazor</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="BelajarGitBlazor.styles.css" />
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('blazor-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) { }
+        })();
+    </script>
+
+
+    <HeadOutlet @rendermode="InteractiveServer" />
+</head>
+
+<body>
+    <Routes @rendermode="InteractiveServer" />
+
+    <script src="js/theme.js"></script>
+    <script src="_framework/blazor.web.js"></script>
+</body>
+
+</html>

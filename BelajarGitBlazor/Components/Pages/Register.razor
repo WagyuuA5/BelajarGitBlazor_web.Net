@@ -1,0 +1,214 @@
+@page "/register"
+@rendermode InteractiveServer
+@inject AuthService AuthService
+@inject NavigationManager Nav
+
+<PageTitle>Daftar – BelajarGitBlazor</PageTitle>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h1 class="auth-title">Buat Akun</h1>
+        <p class="auth-subtitle">Bergabung dengan BelajarGitBlazor</p>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                @_errorMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(_successMessage))
+        {
+            <div class="alert alert-success" role="alert">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                @_successMessage
+            </div>
+        }
+
+        <div class="form-group">
+            <label class="form-label" for="name-input">
+                Nama Lengkap <span class="required">*</span>
+            </label>
+            <div class="input-group">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+                <input class="form-input"
+                       id="name-input"
+                       type="text"
+                       placeholder="Joko Widodo"
+                       @bind="_name" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="email-input">
+                Email <span class="required">*</span>
+            </label>
+            <div class="input-group">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+                <input class="form-input @(_emailTouched && !IsValidEmail(_email) ? "is-invalid" : _emailTouched ? "is-valid" : "")"
+                       id="email-input"
+                       type="email"
+                       placeholder="nama@email.com"
+                       @bind="_email"
+                       @onblur="() => _emailTouched = true" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="password-input">
+                Password <span class="required">*</span>
+            </label>
+            <div class="input-group">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <input class="form-input"
+                       id="password-input"
+                       type="@(_showPassword ? "text" : "password")"
+                       placeholder="••••••••"
+                       @bind="_password"
+                       @bind:event="oninput"
+                       @onkeyup="CheckPasswordStrength" />
+                <button class="input-action" type="button" @onclick="() => _showPassword = !_showPassword">
+                    @if (_showPassword)
+                    {
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    }
+                    else
+                    {
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    }
+                </button>
+            </div>
+            
+            @if (!string.IsNullOrEmpty(_password))
+            {
+                <div class="strength-bars">
+                    <div class="strength-bar @(_strengthScore >= 1 ? GetStrengthClass() : "")"></div>
+                    <div class="strength-bar @(_strengthScore >= 2 ? GetStrengthClass() : "")"></div>
+                    <div class="strength-bar @(_strengthScore >= 3 ? GetStrengthClass() : "")"></div>
+                    <div class="strength-bar @(_strengthScore >= 4 ? GetStrengthClass() : "")"></div>
+                </div>
+                <div class="strength-label" style="color: @GetStrengthColor()">@_strengthLabel</div>
+            }
+        </div>
+
+        <button class="btn btn-primary" style="width:100%; margin-top: 10px;" @onclick="HandleRegisterAsync" disabled="@_isLoading">
+            @if (_isLoading)
+            {
+                <span class="spinner"></span>
+                <span>Mendaftar...</span>
+            }
+            else
+            {
+                <span>Daftar Akun</span>
+            }
+        </button>
+
+        <div class="form-divider">atau</div>
+
+        <p class="auth-footer">
+            Sudah punya akun? <a href="/login">Masuk di sini</a>
+        </p>
+    </div>
+</div>
+
+@code {
+    private string _name = "";
+    private string _email = "";
+    private string _password = "";
+    private bool _showPassword = false;
+    private bool _isLoading = false;
+    private bool _emailTouched = false;
+    private string _errorMessage = "";
+    private string _successMessage = "";
+
+    private int _strengthScore = 0;
+    private string _strengthLabel = "";
+
+    private static bool IsValidEmail(string email) =>
+        !string.IsNullOrWhiteSpace(email) && email.Contains('@') && email.Contains('.');
+
+    private void CheckPasswordStrength()
+    {
+        _strengthScore = 0;
+        if (string.IsNullOrEmpty(_password)) 
+        {
+            _strengthLabel = "";
+            return;
+        }
+
+        if (_password.Length >= 8) _strengthScore++;
+        if (_password.Any(char.IsUpper)) _strengthScore++;
+        if (_password.Any(char.IsDigit)) _strengthScore++;
+        if (_password.Any(ch => !char.IsLetterOrDigit(ch))) _strengthScore++;
+
+        _strengthLabel = _strengthScore switch
+        {
+            1 => "Sangat Lemah",
+            2 => "Lemah",
+            3 => "Sedang",
+            4 => "Kuat",
+            _ => "Sangat Lemah"
+        };
+    }
+
+    private string GetStrengthClass() => _strengthScore switch
+    {
+        1 => "weak",
+        2 => "fair",
+        3 => "good",
+        4 => "strong",
+        _ => ""
+    };
+
+    private string GetStrengthColor() => _strengthScore switch
+    {
+        1 => "var(--danger)",
+        2 => "var(--warning)",
+        3 => "var(--accent)",
+        4 => "var(--success)",
+        _ => "var(--text-muted)"
+    };
+
+    private async Task HandleRegisterAsync()
+    {
+        _errorMessage = "";
+        _successMessage = "";
+
+        if (string.IsNullOrWhiteSpace(_name) || !IsValidEmail(_email) || string.IsNullOrWhiteSpace(_password))
+        {
+            _emailTouched = true;
+            _errorMessage = "Harap isi semua field dengan benar.";
+            return;
+        }
+
+        if (_strengthScore < 3)
+        {
+            _errorMessage = "Password terlalu lemah. Gunakan kombinasi huruf besar, angka, dan simbol.";
+            return;
+        }
+
+        _isLoading = true;
+        await Task.Delay(1200);
+
+        var result = await AuthService.RegisterAsync(_name, _email, _password);
+        _isLoading = false;
+
+        if (result.Success)
+        {
+            _successMessage = result.Message;
+            await Task.Delay(1500);
+            Nav.NavigateTo("/");
+        }
+        else
+        {
+            _errorMessage = result.Message;
+        }
+    }
+}

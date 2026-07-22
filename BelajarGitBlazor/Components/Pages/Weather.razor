@@ -1,0 +1,111 @@
+@page "/weather"
+
+<PageTitle>Prakiraan Cuaca – BelajarGitBlazor</PageTitle>
+
+<div class="page-header">
+    <h1>Prakiraan Cuaca</h1>
+    <p>Demonstrasi rendering tabel dinamis dari data dengan gaya modern.</p>
+</div>
+
+@if (forecasts == null)
+{
+    <div style="padding: 40px; text-align: center; color: var(--text-muted);">
+        <span class="spinner" style="margin-bottom: 16px;"></span>
+        <p>Memuat data cuaca...</p>
+    </div>
+}
+else
+{
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Suhu Rata-rata</div>
+            <div class="stat-value">@(Math.Round(forecasts.Average(f => f.TemperatureC)))°C</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Suhu Tertinggi</div>
+            <div class="stat-value" style="background: linear-gradient(135deg, var(--danger), var(--warning)); -webkit-background-clip: text; background-clip: text;">
+                @(forecasts.Max(f => f.TemperatureC))°C
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Suhu Terendah</div>
+            <div class="stat-value" style="background: linear-gradient(135deg, var(--accent), var(--primary)); -webkit-background-clip: text; background-clip: text;">
+                @(forecasts.Min(f => f.TemperatureC))°C
+            </div>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Suhu (°C)</th>
+                    <th>Suhu (°F)</th>
+                    <th>Kondisi</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var forecast in forecasts)
+                {
+                    <tr>
+                        <td style="font-weight: 600;">@forecast.Date.ToShortDateString()</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div style="width:40px; height:6px; background:var(--surface-alt); border-radius:4px; overflow:hidden;">
+                                    <div style="height:100%; width:@(forecast.TemperatureC * 100 / 40)%; background:var(--@(forecast.TemperatureC > 28 ? "danger" : forecast.TemperatureC < 23 ? "accent" : "primary"));"></div>
+                                </div>
+                                @forecast.TemperatureC
+                            </div>
+                        </td>
+                        <td style="color: var(--text-muted);">@forecast.TemperatureF</td>
+                        <td>@forecast.Summary</td>
+                        <td>
+                            @if (forecast.TemperatureC > 28)
+                            {
+                                <span class="badge badge-danger">Panas</span>
+                            }
+                            else if (forecast.TemperatureC < 23)
+                            {
+                                <span class="badge badge-primary">Sejuk</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-success">Ideal</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private WeatherForecast[]? forecasts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulasi network delay
+        await Task.Delay(500);
+
+        var startDate = DateOnly.FromDateTime(DateTime.Now);
+        var summaries = new[] { "Cerah", "Berawan", "Mendung", "Hujan Ringan", "Hujan Lebat", "Badai Petir" };
+        
+        forecasts = Enumerable.Range(0, 5).Select(index => new WeatherForecast
+        {
+            Date = startDate.AddDays(index),
+            TemperatureC = Random.Shared.Next(20, 35),
+            Summary = summaries[Random.Shared.Next(summaries.Length)]
+        }).ToArray();
+    }
+
+    private class WeatherForecast
+    {
+        public DateOnly Date { get; set; }
+        public int TemperatureC { get; set; }
+        public string? Summary { get; set; }
+        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    }
+}
