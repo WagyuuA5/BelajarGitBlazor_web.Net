@@ -80,7 +80,7 @@
         <div class="wilayah-dropdown @(showKabupaten ? "open" : "") @(selectedProvinsi == null ? "disabled" : "")" @onfocusout="() => CloseDropdownDelayed(nameof(showKabupaten))">
             <div class="wilayah-dropdown-trigger" @onclick="() => { if (selectedProvinsi != null) ToggleDropdown(nameof(showKabupaten)); }">
                 <span class="@(selectedKabupaten == null ? "placeholder" : "")">
-                    @(selectedKabupaten?.Name ?? (selectedProvinsi == null ? "Pilih provinsi dulu..." : "Pilih Kabupaten/Kota..."))
+                    @(selectedKabupaten?.Name ?? (selectedProvinsi == null ? "Pilih provinsi terlebih dahulu" : "Pilih Kabupaten/Kota..."))
                 </span>
                 <svg class="wilayah-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
@@ -130,7 +130,7 @@
         <div class="wilayah-dropdown @(showKecamatan ? "open" : "") @(selectedKabupaten == null ? "disabled" : "")" @onfocusout="() => CloseDropdownDelayed(nameof(showKecamatan))">
             <div class="wilayah-dropdown-trigger" @onclick="() => { if (selectedKabupaten != null) ToggleDropdown(nameof(showKecamatan)); }">
                 <span class="@(selectedKecamatan == null ? "placeholder" : "")">
-                    @(selectedKecamatan?.Name ?? (selectedKabupaten == null ? "Pilih kabupaten dulu..." : "Pilih Kecamatan..."))
+                    @(selectedKecamatan?.Name ?? (selectedKabupaten == null ? "Pilih kabupaten terlebih dahulu" : "Pilih Kecamatan..."))
                 </span>
                 <svg class="wilayah-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
@@ -180,7 +180,7 @@
         <div class="wilayah-dropdown @(showKelurahan ? "open" : "") @(selectedKecamatan == null ? "disabled" : "")" @onfocusout="() => CloseDropdownDelayed(nameof(showKelurahan))">
             <div class="wilayah-dropdown-trigger" @onclick="() => { if (selectedKecamatan != null) ToggleDropdown(nameof(showKelurahan)); }">
                 <span class="@(selectedKelurahan == null ? "placeholder" : "")">
-                    @(selectedKelurahan?.Name ?? (selectedKecamatan == null ? "Pilih kecamatan dulu..." : "Pilih Kelurahan/Desa..."))
+                    @(selectedKelurahan?.Name ?? (selectedKecamatan == null ? "Pilih kecamatan terlebih dahulu" : "Pilih Kelurahan/Desa..."))
                 </span>
                 <svg class="wilayah-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
