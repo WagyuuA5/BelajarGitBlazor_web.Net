@@ -1893,3 +1893,157 @@ code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Courier New
     }
 }
 
+/* Redesign About Page CSS */
+.section-alt {
+    background-color: var(--surface-alt);
+    padding: 60px 0;
+    margin: 40px -36px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.section-alt-inner {
+    padding: 0 36px;
+    max-width: 980px;
+    margin: 0 auto;
+}
+
+.grid-3-col {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 32px;
+}
+
+@media (max-width: 800px) {
+    .grid-3-col { grid-template-columns: 1fr; }
+}
+
+/* Horizontal Bar Chart */
+.coverage-chart {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 24px 32px;
+    margin-top: 32px;
+    box-shadow: var(--shadow-sm);
+}
+
+.chart-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chart-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 16px;
+}
+
+.chart-row:last-child {
+    margin-bottom: 0;
+}
+
+.chart-label {
+    width: 140px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-align: right;
+}
+
+.chart-bar-wrap {
+    flex: 1;
+    height: 24px;
+    background: var(--surface-alt);
+    border-radius: var(--radius-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-bar {
+    height: 100%;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    width: 0; /* Animated inline */
+    transition: width 1s ease-out;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 12px;
+}
+
+.chart-bar.bg-primary { background: linear-gradient(90deg, var(--primary), var(--primary-dark)); }
+.chart-bar.bg-warning { background: linear-gradient(90deg, var(--warning), #d97706); }
+.chart-bar.bg-success { background: linear-gradient(90deg, var(--success), #059669); }
+.chart-bar.bg-accent { background: linear-gradient(90deg, var(--accent), #0284c7); }
+
+.chart-value {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* 3-Step Flowchart */
+.flowchart {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 24px 32px;
+    margin-bottom: 32px;
+    box-shadow: var(--shadow-sm);
+}
+
+.flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+}
+
+.flow-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+}
+
+.flow-step h4 {
+    margin: 0 0 4px;
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.flow-step p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.flow-arrow {
+    color: var(--border);
+    flex-shrink: 0;
+    margin: 0 16px;
+}
+
+@media (max-width: 640px) {
+    .flowchart { flex-direction: column; gap: 24px; padding: 24px; }
+    .flow-arrow { transform: rotate(90deg); margin: 0; }
+    .chart-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .chart-label { text-align: left; width: 100%; }
+}
