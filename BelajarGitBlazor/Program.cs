@@ -8,6 +8,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://wilayah.id/") });
 
 var app = builder.Build();
 
