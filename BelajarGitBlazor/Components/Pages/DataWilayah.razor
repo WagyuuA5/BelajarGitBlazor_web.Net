@@ -1,0 +1,591 @@
+@page "/data-wilayah"
+@rendermode InteractiveServer
+@inject IWilayahService WilayahService
+@inject IJSRuntime JS
+@using BelajarGitBlazor.Services
+@using BelajarGitBlazor.Models
+
+<PageTitle>WilayahKu – Direktori Wilayah Indonesia</PageTitle>
+
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+    <div style="flex-grow: 1;">
+        <h1 style="margin-bottom: 8px;">Temukan Kode Wilayah Administrasi Indonesia dengan Cepat dan Akurat</h1>
+        <p style="margin: 0; opacity: 0.9; margin-bottom: 12px;">Jelajahi kode wilayah dari Provinsi hingga Kelurahan/Desa bersumber dari data resmi Kemendagri.</p>
+        
+        <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 8px; align-items: center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>@(selectedProvinsi != null ? selectedProvinsi.Name : "Provinsi")</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            <span style="@(selectedKabupaten != null ? "" : "opacity: 0.5")">@(selectedKabupaten != null ? selectedKabupaten.Name : "Kabupaten/Kota")</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            <span style="@(selectedKecamatan != null ? "" : "opacity: 0.5")">@(selectedKecamatan != null ? selectedKecamatan.Name : "Kecamatan")</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            <span style="@(selectedKelurahan != null ? "" : "opacity: 0.5")">@(selectedKelurahan != null ? selectedKelurahan.Name : "Kelurahan/Desa")</span>
+        </div>
+    </div>
+    @if (selectedProvinsi != null || selectedKabupaten != null || selectedKecamatan != null || selectedKelurahan != null)
+    {
+        <button class="btn btn-secondary" @onclick="ResetAll" style="display: flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1 4 1 10 7 10"/>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            </svg>
+            Reset Semua
+        </button>
+    }
+</div>
+
+@* ===== DROPDOWN GRID ===== *@
+<div class="wilayah-grid">
+    @* --- Provinsi --- *@
+    <div class="wilayah-dropdown-wrapper">
+        <label class="wilayah-label">Provinsi</label>
+        <div class="wilayah-dropdown @(showProvinsi ? "open" : "")" @onfocusout="() => CloseDropdownDelayed(nameof(showProvinsi))">
+            <div class="wilayah-dropdown-trigger" @onclick="() => ToggleDropdown(nameof(showProvinsi))">
+                <span class="@(selectedProvinsi == null ? "placeholder" : "")">
+                    @(selectedProvinsi?.Name ?? "Pilih Provinsi...")
+                </span>
+                <svg class="wilayah-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            @if (showProvinsi)
+            {
+                <div class="wilayah-dropdown-menu" @onclick:stopPropagation="true">
+                    <div class="wilayah-search-box">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="text" placeholder="Cari provinsi..." @bind="searchProvinsi" @bind:event="oninput" @onclick:stopPropagation="true" />
+                    </div>
+                    <div class="wilayah-dropdown-list">
+                        @if (provinsiList == null)
+                        {
+                            <div class="wilayah-dropdown-loading"><span class="spinner" style="width:18px;height:18px;border-width:2px;"></span> Memuat...</div>
+                        }
+                        else
+                        {
+                            var filtered = FilterList(provinsiList, searchProvinsi);
+                            @if (filtered.Length == 0)
+                            {
+                                <div class="wilayah-dropdown-empty">Tidak ditemukan</div>
+                            }
+                            else
+                            {
+                                @foreach (var item in filtered)
+                                {
+                                    <div class="wilayah-dropdown-item @(selectedProvinsi?.Code == item.Code ? "active" : "")" @onclick="() => SelectProvinsi(item)">
+                                        <span>@item.Name</span>
+                                        <code>@item.Code</code>
+                                    </div>
+                                }
+                            }
+                        }
+                    </div>
+                    @if (provinsiList != null)
+                    {
+                        <div class="wilayah-counter">@provinsiList.Length provinsi tersedia</div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    @* --- Kabupaten/Kota --- *@
+    <div class="wilayah-dropdown-wrapper">
+        <label class="wilayah-label">Kabupaten / Kota</label>
+        <div class="wilayah-dropdown @(showKabupaten ? "open" : "") @(selectedProvinsi == null ? "disabled" : "")" @onfocusout="() => CloseDropdownDelayed(nameof(showKabupaten))">
+            <div class="wilayah-dropdown-trigger" @onclick="() => { if (selectedProvinsi != null) ToggleDropdown(nameof(showKabupaten)); }">
+                <span class="@(selectedKabupaten == null ? "placeholder" : "")">
+                    @(selectedKabupaten?.Name ?? (selectedProvinsi == null ? "Pilih provinsi terlebih dahulu" : "Pilih Kabupaten/Kota..."))
+                </span>
+                <svg class="wilayah-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            @if (showKabupaten && selectedProvinsi != null)
+            {
+                <div class="wilayah-dropdown-menu" @onclick:stopPropagation="true">
+                    <div class="wilayah-search-box">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="text" placeholder="Cari kabupaten/kota..." @bind="searchKabupaten" @bind:event="oninput" @onclick:stopPropagation="true" />
+                    </div>
+                    <div class="wilayah-dropdown-list">
+                        @if (isLoadingKabupaten)
+                        {
+                            <div class="wilayah-dropdown-loading"><span class="spinner" style="width:18px;height:18px;border-width:2px;"></span> Memuat...</div>
+                        }
+                        else if (kabupatenList != null)
+                        {
+                            var filtered = FilterList(kabupatenList, searchKabupaten);
+                            @if (filtered.Length == 0)
+                            {
+                                <div class="wilayah-dropdown-empty">Tidak ditemukan</div>
+                            }
+                            else
+                            {
+                                @foreach (var item in filtered)
+                                {
+                                    <div class="wilayah-dropdown-item @(selectedKabupaten?.Code == item.Code ? "active" : "")" @onclick="() => SelectKabupaten(item)">
+                                        <span>@item.Name</span>
+                                        <code>@item.Code</code>
+                                    </div>
+                                }
+                            }
+                        }
+                    </div>
+                    @if (kabupatenList != null && !isLoadingKabupaten)
+                    {
+                        <div class="wilayah-counter">@kabupatenList.Length kabupaten/kota tersedia</div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    @* --- Kecamatan --- *@
+    <div class="wilayah-dropdown-wrapper">
+        <label class="wilayah-label">Kecamatan</label>
+        <div class="wilayah-dropdown @(showKecamatan ? "open" : "") @(selectedKabupaten == null ? "disabled" : "")" @onfocusout="() => CloseDropdownDelayed(nameof(showKecamatan))">
+            <div class="wilayah-dropdown-trigger" @onclick="() => { if (selectedKabupaten != null) ToggleDropdown(nameof(showKecamatan)); }">
+                <span class="@(selectedKecamatan == null ? "placeholder" : "")">
+                    @(selectedKecamatan?.Name ?? (selectedKabupaten == null ? "Pilih kabupaten terlebih dahulu" : "Pilih Kecamatan..."))
+                </span>
+                <svg class="wilayah-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            @if (showKecamatan && selectedKabupaten != null)
+            {
+                <div class="wilayah-dropdown-menu" @onclick:stopPropagation="true">
+                    <div class="wilayah-search-box">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="text" placeholder="Cari kecamatan..." @bind="searchKecamatan" @bind:event="oninput" @onclick:stopPropagation="true" />
+                    </div>
+                    <div class="wilayah-dropdown-list">
+                        @if (isLoadingKecamatan)
+                        {
+                            <div class="wilayah-dropdown-loading"><span class="spinner" style="width:18px;height:18px;border-width:2px;"></span> Memuat...</div>
+                        }
+                        else if (kecamatanList != null)
+                        {
+                            var filtered = FilterList(kecamatanList, searchKecamatan);
+                            @if (filtered.Length == 0)
+                            {
+                                <div class="wilayah-dropdown-empty">Tidak ditemukan</div>
+                            }
+                            else
+                            {
+                                @foreach (var item in filtered)
+                                {
+                                    <div class="wilayah-dropdown-item @(selectedKecamatan?.Code == item.Code ? "active" : "")" @onclick="() => SelectKecamatan(item)">
+                                        <span>@item.Name</span>
+                                        <code>@item.Code</code>
+                                    </div>
+                                }
+                            }
+                        }
+                    </div>
+                    @if (kecamatanList != null && !isLoadingKecamatan)
+                    {
+                        <div class="wilayah-counter">@kecamatanList.Length kecamatan tersedia</div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    @* --- Kelurahan/Desa --- *@
+    <div class="wilayah-dropdown-wrapper">
+        <label class="wilayah-label">Kelurahan / Desa</label>
+        <div class="wilayah-dropdown @(showKelurahan ? "open" : "") @(selectedKecamatan == null ? "disabled" : "")" @onfocusout="() => CloseDropdownDelayed(nameof(showKelurahan))">
+            <div class="wilayah-dropdown-trigger" @onclick="() => { if (selectedKecamatan != null) ToggleDropdown(nameof(showKelurahan)); }">
+                <span class="@(selectedKelurahan == null ? "placeholder" : "")">
+                    @(selectedKelurahan?.Name ?? (selectedKecamatan == null ? "Pilih kecamatan terlebih dahulu" : "Pilih Kelurahan/Desa..."))
+                </span>
+                <svg class="wilayah-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            @if (showKelurahan && selectedKecamatan != null)
+            {
+                <div class="wilayah-dropdown-menu" @onclick:stopPropagation="true">
+                    <div class="wilayah-search-box">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="text" placeholder="Cari kelurahan/desa..." @bind="searchKelurahan" @bind:event="oninput" @onclick:stopPropagation="true" />
+                    </div>
+                    <div class="wilayah-dropdown-list">
+                        @if (isLoadingKelurahan)
+                        {
+                            <div class="wilayah-dropdown-loading"><span class="spinner" style="width:18px;height:18px;border-width:2px;"></span> Memuat...</div>
+                        }
+                        else if (kelurahanList != null)
+                        {
+                            var filtered = FilterList(kelurahanList, searchKelurahan);
+                            @if (filtered.Length == 0)
+                            {
+                                <div class="wilayah-dropdown-empty">Tidak ditemukan</div>
+                            }
+                            else
+                            {
+                                @foreach (var item in filtered)
+                                {
+                                    <div class="wilayah-dropdown-item @(selectedKelurahan?.Code == item.Code ? "active" : "")" @onclick="() => SelectKelurahan(item)">
+                                        <span>@item.Name</span>
+                                        <code>@item.Code</code>
+                                    </div>
+                                }
+                            }
+                        }
+                    </div>
+                    @if (kelurahanList != null && !isLoadingKelurahan)
+                    {
+                        <div class="wilayah-counter">@kelurahanList.Length kelurahan/desa tersedia</div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@* ===== HASIL TABEL ===== *@
+@if (selectedProvinsi != null)
+{
+    <div class="wilayah-result-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <h2 style="margin: 0; font-size: 1.15rem;">Kode Wilayah Terpilih</h2>
+        </div>
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Level</th>
+                        <th>Nama Wilayah</th>
+                        <th>Kode</th>
+                        <th style="width: 80px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (selectedProvinsi != null)
+                    {
+                        <tr>
+                            <td><span class="badge" style="background: var(--primary-light); color: var(--primary);">Provinsi</span></td>
+                            <td style="font-weight: 600;">@selectedProvinsi.Name</td>
+                            <td><code class="wilayah-code">@selectedProvinsi.Code</code></td>
+                            <td style="text-align: center;">
+                                <button class="wilayah-copy-btn" @onclick="() => CopyToClipboard(selectedProvinsi.Code)" title="Copy kode">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    @if (selectedKabupaten != null)
+                    {
+                        <tr>
+                            <td><span class="badge" style="background: var(--warning-light); color: var(--warning);">Kab/Kota</span></td>
+                            <td style="font-weight: 600;">@selectedKabupaten.Name</td>
+                            <td><code class="wilayah-code">@selectedKabupaten.Code</code></td>
+                            <td style="text-align: center;">
+                                <button class="wilayah-copy-btn" @onclick="() => CopyToClipboard(selectedKabupaten.Code)" title="Copy kode">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    @if (selectedKecamatan != null)
+                    {
+                        <tr>
+                            <td><span class="badge" style="background: rgba(6, 182, 212, 0.12); color: var(--accent);">Kecamatan</span></td>
+                            <td style="font-weight: 600;">@selectedKecamatan.Name</td>
+                            <td><code class="wilayah-code">@selectedKecamatan.Code</code></td>
+                            <td style="text-align: center;">
+                                <button class="wilayah-copy-btn" @onclick="() => CopyToClipboard(selectedKecamatan.Code)" title="Copy kode">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    @if (selectedKelurahan != null)
+                    {
+                        <tr>
+                            <td><span class="badge" style="background: var(--success-light); color: var(--success);">Kel/Desa</span></td>
+                            <td style="font-weight: 600;">@selectedKelurahan.Name</td>
+                            <td><code class="wilayah-code">@selectedKelurahan.Code</code></td>
+                            <td style="text-align: center;">
+                                <button class="wilayah-copy-btn" @onclick="() => CopyToClipboard(selectedKelurahan.Code)" title="Copy kode">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div class="wilayah-empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+            <circle cx="12" cy="10" r="3"/>
+        </svg>
+        <h3>Pilih Wilayah</h3>
+        <p>Mulai dengan memilih dahulu provinsi di atas untuk melihat kode wilayah.</p>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(copyFeedback))
+{
+    <div class="wilayah-toast">✓ Kode "@copyFeedback" berhasil disalin!</div>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="wilayah-error">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+        @errorMessage
+    </div>
+}
+
+@code {
+    // === Data Lists ===
+    private WilayahItem[]? provinsiList;
+    private WilayahItem[]? kabupatenList;
+    private WilayahItem[]? kecamatanList;
+    private WilayahItem[]? kelurahanList;
+
+    // === Selected Items ===
+    private WilayahItem? selectedProvinsi;
+    private WilayahItem? selectedKabupaten;
+    private WilayahItem? selectedKecamatan;
+    private WilayahItem? selectedKelurahan;
+
+    // === Search Strings ===
+    private string searchProvinsi = "";
+    private string searchKabupaten = "";
+    private string searchKecamatan = "";
+    private string searchKelurahan = "";
+
+    // === Dropdown Visibility ===
+    private bool showProvinsi;
+    private bool showKabupaten;
+    private bool showKecamatan;
+    private bool showKelurahan;
+
+    // === Loading States ===
+    private bool isLoadingKabupaten;
+    private bool isLoadingKecamatan;
+    private bool isLoadingKelurahan;
+
+    // === UI Feedback ===
+    private string? copyFeedback;
+    private string? errorMessage;
+    private System.Timers.Timer? toastTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            provinsiList = await WilayahService.GetProvinsiAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Gagal memuat data provinsi: {ex.Message}";
+        }
+    }
+
+    // === Selection Handlers ===
+    private async Task SelectProvinsi(WilayahItem item)
+    {
+        selectedProvinsi = item;
+        selectedKabupaten = null;
+        selectedKecamatan = null;
+        selectedKelurahan = null;
+        kabupatenList = null;
+        kecamatanList = null;
+        kelurahanList = null;
+        searchProvinsi = "";
+        searchKabupaten = "";
+        searchKecamatan = "";
+        searchKelurahan = "";
+        showProvinsi = false;
+        errorMessage = null;
+
+        isLoadingKabupaten = true;
+        StateHasChanged();
+
+        try
+        {
+            kabupatenList = await WilayahService.GetKabupatenAsync(item.Code);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Gagal memuat data kabupaten/kota: {ex.Message}";
+        }
+        finally
+        {
+            isLoadingKabupaten = false;
+        }
+    }
+
+    private async Task SelectKabupaten(WilayahItem item)
+    {
+        selectedKabupaten = item;
+        selectedKecamatan = null;
+        selectedKelurahan = null;
+        kecamatanList = null;
+        kelurahanList = null;
+        searchKabupaten = "";
+        searchKecamatan = "";
+        searchKelurahan = "";
+        showKabupaten = false;
+        errorMessage = null;
+
+        isLoadingKecamatan = true;
+        StateHasChanged();
+
+        try
+        {
+            kecamatanList = await WilayahService.GetKecamatanAsync(item.Code);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Gagal memuat data kecamatan: {ex.Message}";
+        }
+        finally
+        {
+            isLoadingKecamatan = false;
+        }
+    }
+
+    private async Task SelectKecamatan(WilayahItem item)
+    {
+        selectedKecamatan = item;
+        selectedKelurahan = null;
+        kelurahanList = null;
+        searchKecamatan = "";
+        searchKelurahan = "";
+        showKecamatan = false;
+        errorMessage = null;
+
+        isLoadingKelurahan = true;
+        StateHasChanged();
+
+        try
+        {
+            kelurahanList = await WilayahService.GetKelurahanAsync(item.Code);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Gagal memuat data kelurahan/desa: {ex.Message}";
+        }
+        finally
+        {
+            isLoadingKelurahan = false;
+        }
+    }
+
+    private void SelectKelurahan(WilayahItem item)
+    {
+        selectedKelurahan = item;
+        searchKelurahan = "";
+        showKelurahan = false;
+    }
+
+    // === Dropdown Toggle ===
+    private void ToggleDropdown(string name)
+    {
+        // Close all first
+        bool wasOpen = name switch
+        {
+            nameof(showProvinsi) => showProvinsi,
+            nameof(showKabupaten) => showKabupaten,
+            nameof(showKecamatan) => showKecamatan,
+            nameof(showKelurahan) => showKelurahan,
+            _ => false
+        };
+
+        showProvinsi = false;
+        showKabupaten = false;
+        showKecamatan = false;
+        showKelurahan = false;
+
+        // Toggle the requested one
+        switch (name)
+        {
+            case nameof(showProvinsi): showProvinsi = !wasOpen; break;
+            case nameof(showKabupaten): showKabupaten = !wasOpen; break;
+            case nameof(showKecamatan): showKecamatan = !wasOpen; break;
+            case nameof(showKelurahan): showKelurahan = !wasOpen; break;
+        }
+    }
+
+    private async Task CloseDropdownDelayed(string name)
+    {
+        await Task.Delay(200);
+        switch (name)
+        {
+            case nameof(showProvinsi): showProvinsi = false; break;
+            case nameof(showKabupaten): showKabupaten = false; break;
+            case nameof(showKecamatan): showKecamatan = false; break;
+            case nameof(showKelurahan): showKelurahan = false; break;
+        }
+        StateHasChanged();
+    }
+
+    // === Reset ===
+    private void ResetAll()
+    {
+        selectedProvinsi = null;
+        selectedKabupaten = null;
+        selectedKecamatan = null;
+        selectedKelurahan = null;
+        kabupatenList = null;
+        kecamatanList = null;
+        kelurahanList = null;
+        searchProvinsi = "";
+        searchKabupaten = "";
+        searchKecamatan = "";
+        searchKelurahan = "";
+        showProvinsi = false;
+        showKabupaten = false;
+        showKecamatan = false;
+        showKelurahan = false;
+        errorMessage = null;
+    }
+
+    // === Filter ===
+    private WilayahItem[] FilterList(WilayahItem[] list, string search)
+    {
+        if (string.IsNullOrWhiteSpace(search)) return list;
+        var lower = search.Trim().ToLowerInvariant();
+        return list.Where(x =>
+            x.Name.ToLowerInvariant().Contains(lower) ||
+            x.Code.ToLowerInvariant().Contains(lower)
+        ).ToArray();
+    }
+
+    // === Copy to Clipboard ===
+    private async Task CopyToClipboard(string text)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            copyFeedback = text;
+            StateHasChanged();
+
+            // Auto-hide toast after 2 seconds
+            toastTimer?.Dispose();
+            toastTimer = new System.Timers.Timer(2000);
+            toastTimer.Elapsed += (s, e) =>
+            {
+                copyFeedback = null;
+                toastTimer?.Dispose();
+                InvokeAsync(StateHasChanged);
+            };
+            toastTimer.AutoReset = false;
+            toastTimer.Start();
+        }
+        catch
+        {
+            // Clipboard API might fail in some contexts
+        }
+    }
+
+    public void Dispose()
+    {
+        toastTimer?.Dispose();
+    }
+
+}

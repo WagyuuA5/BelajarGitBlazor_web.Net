@@ -1596,3 +1596,300 @@ code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Courier New
     margin: 0;
 }
 
+/* =============================================
+   DATA WILAYAH PAGE
+   ============================================= */
+
+.wilayah-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.wilayah-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* Dropdown wrapper */
+.wilayah-dropdown-wrapper {
+    position: relative;
+}
+
+.wilayah-dropdown {
+    position: relative;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.wilayah-dropdown:hover:not(.disabled) {
+    border-color: var(--primary);
+}
+
+.wilayah-dropdown.open {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+    z-index: 20;
+}
+
+.wilayah-dropdown.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.wilayah-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 0.92rem;
+    min-height: 42px;
+    user-select: none;
+    color: var(--text);
+}
+
+.wilayah-dropdown-trigger .placeholder {
+    color: var(--text-muted);
+}
+
+.wilayah-chevron {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform var(--transition-fast);
+}
+
+.wilayah-dropdown.open .wilayah-chevron {
+    transform: rotate(180deg);
+}
+
+/* Dropdown menu */
+.wilayah-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    z-index: 50;
+    overflow: hidden;
+    animation: wilayah-dropdown-in 0.15s ease-out;
+}
+
+@keyframes wilayah-dropdown-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Search box inside dropdown */
+.wilayah-search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+}
+
+.wilayah-search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.88rem;
+    color: var(--text);
+    font-family: var(--font);
+}
+
+.wilayah-search-box input::placeholder {
+    color: var(--text-subtle);
+}
+
+/* Dropdown list */
+.wilayah-dropdown-list {
+    max-height: 220px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.wilayah-dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: var(--text);
+    transition: background var(--transition-fast);
+    gap: 8px;
+}
+
+.wilayah-dropdown-item:hover {
+    background: var(--surface-hover);
+}
+
+.wilayah-dropdown-item.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.wilayah-dropdown-item code {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    background: var(--surface-alt);
+    padding: 2px 7px;
+    border-radius: var(--radius-xs);
+    flex-shrink: 0;
+}
+
+.wilayah-dropdown-item.active code {
+    background: var(--primary-glow);
+    color: var(--primary);
+}
+
+.wilayah-dropdown-loading,
+.wilayah-dropdown-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.wilayah-counter {
+    padding: 6px 14px;
+    font-size: 0.76rem;
+    color: var(--text-subtle);
+    border-top: 1px solid var(--border);
+    text-align: center;
+}
+
+/* Result card */
+.wilayah-result-card {
+    margin-top: 28px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    animation: wilayah-fade-in 0.25s ease-out;
+}
+
+@keyframes wilayah-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.wilayah-code {
+    font-size: 0.88rem;
+    font-weight: 600;
+    background: var(--surface-alt);
+    padding: 3px 10px;
+    border-radius: var(--radius-xs);
+    color: var(--primary);
+    letter-spacing: 0.02em;
+}
+
+.wilayah-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.wilayah-copy-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* Empty state */
+.wilayah-empty-state {
+    margin-top: 28px;
+    padding: 60px 20px;
+    text-align: center;
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+}
+
+.wilayah-empty-state svg {
+    margin-bottom: 12px;
+    opacity: 0.4;
+}
+
+.wilayah-empty-state h3 {
+    margin: 0 0 6px;
+    font-size: 1.1rem;
+    color: var(--text);
+}
+
+.wilayah-empty-state p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Toast notification */
+.wilayah-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--success);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    z-index: 9999;
+    animation: wilayah-toast-in 0.25s ease-out;
+}
+
+@keyframes wilayah-toast-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Error message */
+.wilayah-error {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--danger-light);
+    color: var(--danger);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .wilayah-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
