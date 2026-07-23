@@ -364,7 +364,7 @@ else
     {
         try
         {
-            var response = await Http.GetFromJsonAsync<WilayahResponse>("api/provinces.json");
+            var response = await Http.GetFromJsonAsync<WilayahResponse>("https://wilayah.id/api/provinces.json");
             provinsiList = response?.Data ?? Array.Empty<WilayahItem>();
         }
         catch (Exception ex)
@@ -395,7 +395,7 @@ else
 
         try
         {
-            var response = await Http.GetFromJsonAsync<WilayahResponse>($"api/regencies/{item.Code}.json");
+            var response = await Http.GetFromJsonAsync<WilayahResponse>($"https://wilayah.id/api/regencies/{item.Code}.json");
             kabupatenList = response?.Data ?? Array.Empty<WilayahItem>();
         }
         catch (Exception ex)
@@ -426,7 +426,7 @@ else
 
         try
         {
-            var response = await Http.GetFromJsonAsync<WilayahResponse>($"api/districts/{item.Code}.json");
+            var response = await Http.GetFromJsonAsync<WilayahResponse>($"https://wilayah.id/api/districts/{item.Code}.json");
             kecamatanList = response?.Data ?? Array.Empty<WilayahItem>();
         }
         catch (Exception ex)
@@ -454,7 +454,7 @@ else
 
         try
         {
-            var response = await Http.GetFromJsonAsync<WilayahResponse>($"api/villages/{item.Code}.json");
+            var response = await Http.GetFromJsonAsync<WilayahResponse>($"https://wilayah.id/api/villages/{item.Code}.json");
             kelurahanList = response?.Data ?? Array.Empty<WilayahItem>();
         }
         catch (Exception ex)
