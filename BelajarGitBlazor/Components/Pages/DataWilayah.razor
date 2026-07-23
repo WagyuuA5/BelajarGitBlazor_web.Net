@@ -1,14 +1,27 @@
 @page "/data-wilayah"
 @rendermode InteractiveServer
-@inject HttpClient Http
+@inject IWilayahService WilayahService
 @inject IJSRuntime JS
+@using BelajarGitBlazor.Services
+@using BelajarGitBlazor.Models
 
-<PageTitle>Data Wilayah – BelajarGitBlazor</PageTitle>
+<PageTitle>WilayahKu – Direktori Wilayah Indonesia</PageTitle>
 
 <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
-    <div>
-        <h1 style="margin-bottom: 6px;">Data Wilayah</h1>
-        <p style="margin: 0;">Jelajahi kode wilayah administrasi Indonesia dari Provinsi hingga Kelurahan/Desa.</p>
+    <div style="flex-grow: 1;">
+        <h1 style="margin-bottom: 8px;">Temukan Kode Wilayah Administrasi Indonesia dengan Cepat dan Akurat</h1>
+        <p style="margin: 0; opacity: 0.9; margin-bottom: 12px;">Jelajahi kode wilayah dari Provinsi hingga Kelurahan/Desa bersumber dari data resmi Kemendagri.</p>
+        
+        <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 8px; align-items: center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>@(selectedProvinsi != null ? selectedProvinsi.Name : "Provinsi")</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            <span style="@(selectedKabupaten != null ? "" : "opacity: 0.5")">@(selectedKabupaten != null ? selectedKabupaten.Name : "Kabupaten/Kota")</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            <span style="@(selectedKecamatan != null ? "" : "opacity: 0.5")">@(selectedKecamatan != null ? selectedKecamatan.Name : "Kecamatan")</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            <span style="@(selectedKelurahan != null ? "" : "opacity: 0.5")">@(selectedKelurahan != null ? selectedKelurahan.Name : "Kelurahan/Desa")</span>
+        </div>
     </div>
     @if (selectedProvinsi != null || selectedKabupaten != null || selectedKecamatan != null || selectedKelurahan != null)
     {
@@ -364,8 +377,7 @@ else
     {
         try
         {
-            var response = await Http.GetFromJsonAsync<WilayahResponse>("api/provinces.json");
-            provinsiList = response?.Data ?? Array.Empty<WilayahItem>();
+            provinsiList = await WilayahService.GetProvinsiAsync();
         }
         catch (Exception ex)
         {
@@ -395,8 +407,7 @@ else
 
         try
         {
-            var response = await Http.GetFromJsonAsync<WilayahResponse>($"api/regencies/{item.Code}.json");
-            kabupatenList = response?.Data ?? Array.Empty<WilayahItem>();
+            kabupatenList = await WilayahService.GetKabupatenAsync(item.Code);
         }
         catch (Exception ex)
         {
@@ -426,8 +437,7 @@ else
 
         try
         {
-            var response = await Http.GetFromJsonAsync<WilayahResponse>($"api/districts/{item.Code}.json");
-            kecamatanList = response?.Data ?? Array.Empty<WilayahItem>();
+            kecamatanList = await WilayahService.GetKecamatanAsync(item.Code);
         }
         catch (Exception ex)
         {
@@ -454,8 +464,7 @@ else
 
         try
         {
-            var response = await Http.GetFromJsonAsync<WilayahResponse>($"api/villages/{item.Code}.json");
-            kelurahanList = response?.Data ?? Array.Empty<WilayahItem>();
+            kelurahanList = await WilayahService.GetKelurahanAsync(item.Code);
         }
         catch (Exception ex)
         {
@@ -579,15 +588,4 @@ else
         toastTimer?.Dispose();
     }
 
-    // === Models ===
-    private class WilayahItem
-    {
-        public string Code { get; set; } = "";
-        public string Name { get; set; } = "";
-    }
-
-    private class WilayahResponse
-    {
-        public WilayahItem[] Data { get; set; } = Array.Empty<WilayahItem>();
-    }
 }
