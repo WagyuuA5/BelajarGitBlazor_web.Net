@@ -35,6 +35,46 @@
     }
 </div>
 
+@* ===== GLOBAL SEARCH BAR ===== *@
+<div class="global-search-wrapper">
+    <div class="global-search-box @(!string.IsNullOrWhiteSpace(globalSearch) ? "has-value" : "")">
+        <svg class="global-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        <input id="global-search-input"
+               class="global-search-input"
+               type="text"
+               placeholder="Cari nama atau kode wilayah di semua level..."
+               @bind="globalSearch"
+               @bind:event="oninput"
+               autocomplete="off" />
+        @if (!string.IsNullOrWhiteSpace(globalSearch))
+        {
+            <button class="global-search-clear" @onclick="() => globalSearch = string.Empty" title="Hapus pencarian">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        }
+    </div>
+    @if (!string.IsNullOrWhiteSpace(globalSearch))
+    {
+        <div class="global-search-hint">
+            @{
+                var hitCount = GetGlobalSearchHitCount();
+            }
+            @if (hitCount == 0)
+            {
+                <span class="hint-empty">Tidak ada wilayah yang cocok dengan "@globalSearch"</span>
+            }
+            else
+            {
+                <span>Menampilkan <strong>@hitCount</strong> hasil untuk "@globalSearch"</span>
+            }
+        </div>
+    }
+</div>
+
 @* ===== DROPDOWN GRID ===== *@
 <div class="wilayah-grid">
     @* --- Provinsi --- *@
@@ -351,7 +391,21 @@ else
     private WilayahItem? selectedKecamatan;
     private WilayahItem? selectedKelurahan;
 
-    // === Search Strings ===
+    // === Global Search (client-side, tidak menyentuh IWilayahService) ===
+    private string globalSearch = "";
+
+    private int GetGlobalSearchHitCount()
+    {
+        if (string.IsNullOrWhiteSpace(globalSearch)) return 0;
+        int count = 0;
+        if (provinsiList != null)   count += FilterList(provinsiList, globalSearch).Length;
+        if (kabupatenList != null)  count += FilterList(kabupatenList, globalSearch).Length;
+        if (kecamatanList != null)  count += FilterList(kecamatanList, globalSearch).Length;
+        if (kelurahanList != null)  count += FilterList(kelurahanList, globalSearch).Length;
+        return count;
+    }
+
+    // === Search Strings (per-dropdown) ===
     private string searchProvinsi = "";
     private string searchKabupaten = "";
     private string searchKecamatan = "";
@@ -546,14 +600,42 @@ else
     }
 
     // === Filter ===
+    // Menggabungkan global search + per-dropdown search:
+    // item lolos jika cocok dengan keduanya (AND), sehingga search bar global
+    // mempersempit pilihan, bukan menimpa filter per-dropdown.
     private WilayahItem[] FilterList(WilayahItem[] list, string search)
     {
-        if (string.IsNullOrWhiteSpace(search)) return list;
-        var lower = search.Trim().ToLowerInvariant();
-        return list.Where(x =>
-            x.Name.ToLowerInvariant().Contains(lower) ||
-            x.Code.ToLowerInvariant().Contains(lower)
-        ).ToArray();
+        var combined = string.IsNullOrWhiteSpace(globalSearch)
+            ? search
+            : string.IsNullOrWhiteSpace(search)
+                ? globalSearch
+                : search; // per-dropdown search lebih spesifik, prioritaskan
+
+        if (string.IsNullOrWhiteSpace(combined) && string.IsNullOrWhiteSpace(globalSearch))
+            return list;
+
+        // Filter oleh global search terlebih dahulu jika ada
+        var result = list;
+        if (!string.IsNullOrWhiteSpace(globalSearch))
+        {
+            var g = globalSearch.Trim().ToLowerInvariant();
+            result = result.Where(x =>
+                x.Name.ToLowerInvariant().Contains(g) ||
+                x.Code.ToLowerInvariant().Contains(g)
+            ).ToArray();
+        }
+
+        // Kemudian filter oleh per-dropdown search
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim().ToLowerInvariant();
+            result = result.Where(x =>
+                x.Name.ToLowerInvariant().Contains(s) ||
+                x.Code.ToLowerInvariant().Contains(s)
+            ).ToArray();
+        }
+
+        return result;
     }
 
     // === Copy to Clipboard ===
