@@ -31,8 +31,8 @@
                 </svg>
             </div>
             <div>
-                <div class="about-stat-number">38 Provinsi</div>
-                <div class="about-stat-label">Cakupan Nasional</div>
+                <div class="about-stat-number @(_isStatsVisible ? "counting pop" : "")">@_statProvinsi</div>
+                <div class="about-stat-label">Cakupan Nasional (Provinsi)</div>
             </div>
         </div>
 
@@ -43,8 +43,8 @@
                 </svg>
             </div>
             <div>
-                <div class="about-stat-number">500+ Kab/Kota</div>
-                <div class="about-stat-label">Data Terverifikasi</div>
+                <div class="about-stat-number @(_isStatsVisible ? "counting pop" : "")">@_statKabupaten+</div>
+                <div class="about-stat-label">Data Terverifikasi (Kab/Kota)</div>
             </div>
         </div>
 
@@ -55,8 +55,8 @@
                 </svg>
             </div>
             <div>
-                <div class="about-stat-number">7.000+ Kecamatan</div>
-                <div class="about-stat-label">Selalu Diperbarui</div>
+                <div class="about-stat-number @(_isStatsVisible ? "counting pop" : "")">@FormatNumber(_statKecamatan)+</div>
+                <div class="about-stat-label">Selalu Diperbarui (Kecamatan)</div>
             </div>
         </div>
 
@@ -67,8 +67,68 @@
                 </svg>
             </div>
             <div>
-                <div class="about-stat-number">80.000+ Desa</div>
+                <div class="about-stat-number @(_isStatsVisible ? "counting pop" : "")">@FormatNumber(_statKelurahan)+</div>
                 <div class="about-stat-label">Kelurahan/Desa Tercakup</div>
+            </div>
+        </div>
+    </div>
+
+    @* ===== PETA KONSEP HIERARKI ===== *@
+    <div class="wilayah-hierarchy">
+        <div class="hierarchy-node">
+            <div class="hierarchy-box" style="--hc: var(--primary);">
+                <div class="hierarchy-box-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                    </svg>
+                </div>
+                <div class="hierarchy-box-label">Provinsi</div>
+                <div class="hierarchy-box-count">38 Entri</div>
+            </div>
+            <div class="hierarchy-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+        </div>
+        
+        <div class="hierarchy-node">
+            <div class="hierarchy-box" style="--hc: var(--warning);">
+                <div class="hierarchy-box-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
+                    </svg>
+                </div>
+                <div class="hierarchy-box-label">Kab/Kota</div>
+                <div class="hierarchy-box-count">514 Entri</div>
+            </div>
+            <div class="hierarchy-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+        </div>
+
+        <div class="hierarchy-node">
+            <div class="hierarchy-box" style="--hc: var(--success);">
+                <div class="hierarchy-box-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div class="hierarchy-box-label">Kecamatan</div>
+                <div class="hierarchy-box-count">7.277 Entri</div>
+            </div>
+            <div class="hierarchy-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+        </div>
+
+        <div class="hierarchy-node">
+            <div class="hierarchy-box" style="--hc: var(--accent);">
+                <div class="hierarchy-box-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
+                    </svg>
+                </div>
+                <div class="hierarchy-box-label">Kelurahan</div>
+                <div class="hierarchy-box-count">83.931 Entri</div>
             </div>
         </div>
     </div>
