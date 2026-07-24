@@ -1,3 +1,5 @@
+@inject AuthService AuthService
+
 <div class="sidebar-logo">
     <div class="sidebar-logo-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -6,8 +8,8 @@
         </svg>
     </div>
     <div>
-        <span class="sidebar-logo-text">Nexora</span>
-        <span class="sidebar-logo-sub">Powered by .NET</span>
+        <span class="sidebar-logo-text">WilayahKu</span>
+        <span class="sidebar-logo-sub">Direktori Wilayah Indonesia</span>
     </div>
 </div>
 
@@ -25,21 +27,12 @@
     </div>
 
     <div class="nav-item">
-        <NavLink class="nav-link" href="counter" id="nav-counter">
+        <NavLink class="nav-link" href="data-wilayah" id="nav-wilayah">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 3v18h18"/>
-                <path d="m19 9-5 5-4-4-3 3"/>
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                <circle cx="12" cy="10" r="3"/>
             </svg>
-            Counter
-        </NavLink>
-    </div>
-
-    <div class="nav-item">
-        <NavLink class="nav-link" href="weather" id="nav-weather">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/>
-            </svg>
-            Weather
+            Data Wilayah
         </NavLink>
     </div>
 
@@ -53,7 +46,7 @@
     </div>
 
     <div class="nav-item">
-        <NavLink class="nav-link" href="About Us" id="nav-about">
+        <NavLink class="nav-link" href="about" id="nav-about">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="12" y1="16" x2="12" y2="12"/>
@@ -65,15 +58,27 @@
     <p class="nav-section-title">Akun</p>
 
     <div class="nav-item">
-        <NavLink class="nav-link" href="login" id="nav-login">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-            </svg>
-            Account
-        </NavLink>
+        @if (AuthService.IsAuthenticated)
+        {
+            <NavLink class="nav-link" href="akun" id="nav-dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
+                </svg>
+                Dashboard Akun
+            </NavLink>
+        }
+        else
+        {
+            <NavLink class="nav-link" href="login" id="nav-login">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+                Login / Register
+            </NavLink>
+        }
     </div>
 </nav>
 
 <div class="sidebar-bottom">
-    <p class="sidebar-version">v1.0.0 &bull; BelajarGitBlazor</p>
+    <p class="sidebar-version">v1.0.0 &bull; WilayahKu</p>
 </div>
