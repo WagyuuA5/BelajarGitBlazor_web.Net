@@ -2,7 +2,9 @@
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authorization
 @using BelajarGitBlazor.Data.Entities
-@inject IPesanKontakService PesanKontakService
+@using BelajarGitBlazor.Data
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext DbContext
 @inject AuthService AuthService
 @inject NavigationManager NavigationManager
 @attribute [Authorize(Roles = "Admin")]
@@ -56,41 +58,30 @@ else
                 <tbody>
                     @foreach (var pesan in _pesanList)
                     {
-                        <tr style="@(pesan.Status == StatusPesan.BelumDibaca ? "font-weight: 600;" : "")">
-                            <td>@pesan.NamaPengirim</td>
-                            <td style="font-size: 0.9rem; color: var(--text-muted);">@pesan.EmailPengirim</td>
+                        <tr style="@(!pesan.IsRead ? "font-weight: 600;" : "")">
+                            <td>@pesan.SenderName</td>
+                            <td style="font-size: 0.9rem; color: var(--text-muted);">@pesan.SenderEmail</td>
                             <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                @(pesan.Isi.Length > 60 ? pesan.Isi[..60] + "..." : pesan.Isi)
+                                @(pesan.Content.Length > 60 ? pesan.Content[..60] + "..." : pesan.Content)
                             </td>
-                            <td style="font-size: 0.85rem; color: var(--text-muted);">@FormatWaktu(pesan.WaktuKirim)</td>
+                            <td style="font-size: 0.85rem; color: var(--text-muted);">@FormatWaktu(pesan.CreatedAt)</td>
                             <td style="text-align: center;">
-                                @switch (pesan.Status)
+                                @if (!pesan.IsRead)
                                 {
-                                    case StatusPesan.BelumDibaca:
-                                        <span class="badge" style="background: rgba(239,68,68,0.12); color: #ef4444;">Belum Dibaca</span>
-                                        break;
-                                    case StatusPesan.SudahDibaca:
-                                        <span class="badge" style="background: rgba(234,179,8,0.12); color: #ca8a04;">Sudah Dibaca</span>
-                                        break;
-                                    case StatusPesan.SudahDitanggapi:
-                                        <span class="badge" style="background: var(--success-light); color: var(--success);">Sudah Ditanggapi</span>
-                                        break;
+                                    <span class="badge" style="background: rgba(239,68,68,0.12); color: #ef4444;">Belum Dibaca</span>
+                                }
+                                else
+                                {
+                                    <span class="badge" style="background: rgba(234,179,8,0.12); color: #ca8a04;">Sudah Dibaca</span>
                                 }
                             </td>
                             <td style="text-align: center;">
                                 <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
-                                    @if (pesan.Status == StatusPesan.BelumDibaca)
+                                    @if (!pesan.IsRead)
                                     {
                                         <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem;"
                                                 @onclick="() => TandaiDibaca(pesan.Id)" disabled="@_isUpdating">
                                             Tandai Dibaca
-                                        </button>
-                                    }
-                                    @if (pesan.Status != StatusPesan.SudahDitanggapi)
-                                    {
-                                        <button class="btn btn-primary" style="padding: 4px 10px; font-size: 0.8rem;"
-                                                @onclick="() => TandaiDitanggapi(pesan.Id)" disabled="@_isUpdating">
-                                            Ditanggapi
                                         </button>
                                     }
                                 </div>
@@ -103,13 +94,7 @@ else
                             <tr>
                                 <td colspan="6" style="background: var(--card-bg); padding: 16px 20px; border-radius: 8px;">
                                     <strong>Isi Pesan Lengkap:</strong>
-                                    <p style="margin: 8px 0 0; white-space: pre-wrap;">@pesan.Isi</p>
-                                    @if (!string.IsNullOrEmpty(pesan.UserId))
-                                    {
-                                        <p style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);">
-                                            Dikirim oleh akun: <code>@pesan.UserId</code>
-                                        </p>
-                                    }
+                                    <p style="margin: 8px 0 0; white-space: pre-wrap;">@pesan.Content</p>
                                 </td>
                             </tr>
                         }
@@ -125,7 +110,7 @@ else
 }
 
 @code {
-    private List<PesanKontak> _pesanList = new();
+    private List<Message> _pesanList = new();
     private int _pesanBelumDibaca;
     private bool _isLoading = true;
     private bool _isUpdating = false;
@@ -146,23 +131,20 @@ else
     private async Task MuatData()
     {
         _isLoading = true;
-        _pesanList = await PesanKontakService.GetSemuaPesanAsync();
-        _pesanBelumDibaca = await PesanKontakService.HitungPesanBelumDibacaAsync();
+        _pesanList = await DbContext.Messages.OrderByDescending(p => p.CreatedAt).ToListAsync();
+        _pesanBelumDibaca = await DbContext.Messages.CountAsync(p => !p.IsRead);
         _isLoading = false;
     }
 
     private async Task TandaiDibaca(int id)
     {
         _isUpdating = true;
-        await PesanKontakService.TandaiSudahDibacaAsync(id);
-        await MuatData();
-        _isUpdating = false;
-    }
-
-    private async Task TandaiDitanggapi(int id)
-    {
-        _isUpdating = true;
-        await PesanKontakService.TandaiSudahDitanggapiAsync(id);
+        var pesan = await DbContext.Messages.FindAsync(id);
+        if (pesan != null)
+        {
+            pesan.IsRead = true;
+            await DbContext.SaveChangesAsync();
+        }
         await MuatData();
         _isUpdating = false;
     }
@@ -174,10 +156,12 @@ else
 
     private static string FormatWaktu(DateTime dt)
     {
-        var diff = DateTime.Now - dt;
+        // Because CreatedAt is UTC, we convert to local for display
+        var localTime = dt.ToLocalTime();
+        var diff = DateTime.Now - localTime;
         if (diff.TotalMinutes < 1) return "Baru saja";
         if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} menit lalu";
         if (diff.TotalHours < 24) return $"{(int)diff.TotalHours} jam lalu";
-        return dt.ToString("dd MMM yyyy, HH:mm", System.Globalization.CultureInfo.GetCultureInfo("id-ID"));
+        return localTime.ToString("dd MMM yyyy, HH:mm", System.Globalization.CultureInfo.GetCultureInfo("id-ID"));
     }
 }

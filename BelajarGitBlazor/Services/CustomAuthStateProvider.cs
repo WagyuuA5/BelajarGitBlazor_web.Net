@@ -25,8 +25,7 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
             var user = _authService.CurrentUser;
             var claims = new[]
             {
-                new Claim(ClaimTypes.Name, user.Name),
-                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Role, user.Role),
             };
             var identity = new ClaimsIdentity(claims, "CustomAuth");

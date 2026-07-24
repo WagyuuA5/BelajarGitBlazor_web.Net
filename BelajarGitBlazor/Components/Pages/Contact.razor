@@ -1,7 +1,9 @@
 @page "/contact"
 @rendermode InteractiveServer
 @inject AuthService AuthService
-@inject IPesanKontakService PesanKontakService
+@using BelajarGitBlazor.Data
+@using BelajarGitBlazor.Data.Entities
+@inject AppDbContext DbContext
 
 <PageTitle>Hubungi Kami – WilayahKu</PageTitle>
 
@@ -107,11 +109,9 @@
 
     protected override void OnInitialized()
     {
-        // Isi otomatis nama & email jika user sudah login
         if (AuthService.IsAuthenticated && AuthService.CurrentUser is not null)
         {
-            _name = AuthService.CurrentUser.Name;
-            _email = AuthService.CurrentUser.Email;
+            _name = AuthService.CurrentUser.Username;
         }
     }
 
@@ -128,14 +128,18 @@
         _isLoading = true;
         try
         {
-            var pesan = new BelajarGitBlazor.Data.Entities.PesanKontak
+            var newMessage = new Message
             {
-                NamaPengirim = _name.Trim(),
-                EmailPengirim = _email.Trim(),
-                Isi = _message.Trim(),
-                UserId = AuthService.CurrentUser?.Email
+                SenderName = _name.Trim(),
+                SenderEmail = _email.Trim(),
+                Content = _message.Trim(),
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
             };
-            await PesanKontakService.KirimPesanAsync(pesan);
+            
+            DbContext.Messages.Add(newMessage);
+            await DbContext.SaveChangesAsync();
+            
             _isSent = true;
             _name = "";
             _email = "";
