@@ -378,6 +378,41 @@ else
     </div>
 }
 
+@* ===== RIWAYAT PENCARIAN ===== *@
+@if (_searchHistory.Count > 0)
+{
+    <div class="search-history-panel">
+        <div class="search-history-header">
+            <p class="search-history-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                Riwayat Pencarian
+            </p>
+            <button class="search-history-clear-btn" @onclick="ClearHistory" id="clear-history-btn">Hapus Semua</button>
+        </div>
+        <div class="search-history-list">
+            @foreach (var entry in _searchHistory)
+            {
+                <button class="search-history-item" @onclick="() => RestoreHistory(entry)" title="Pulihkan pencarian ini">
+                    <div class="search-history-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                        </svg>
+                    </div>
+                    <div class="search-history-path">
+                        <div class="search-history-path-text">
+                            @BuildHistoryPath(entry)
+                        </div>
+                        <div class="search-history-time">@FormatHistoryTime(entry.SavedAt)</div>
+                    </div>
+                    <span class="search-history-restore">Pulihkan →</span>
+                </button>
+            }
+        </div>
+    </div>
+}
+
 @code {
     // === Data Lists ===
     private WilayahItem[]? provinsiList;
@@ -403,6 +438,103 @@ else
         if (kecamatanList != null)  count += FilterList(kecamatanList, globalSearch).Length;
         if (kelurahanList != null)  count += FilterList(kelurahanList, globalSearch).Length;
         return count;
+    }
+
+    // === Search History (client-side only, reset saat page refresh) ===
+    private record SearchHistoryEntry(
+        WilayahItem? Provinsi,
+        WilayahItem? Kabupaten,
+        WilayahItem? Kecamatan,
+        WilayahItem? Kelurahan,
+        DateTime SavedAt);
+
+    private List<SearchHistoryEntry> _searchHistory = new();
+    private const int MaxHistoryEntries = 5;
+
+    private void SaveToHistory()
+    {
+        // Jangan simpan jika belum pilih provinsi sama sekali
+        if (selectedProvinsi == null) return;
+
+        // Cegah duplikat entri yang sama persis
+        var isDuplicate = _searchHistory.Any(h =>
+            h.Provinsi?.Code == selectedProvinsi?.Code &&
+            h.Kabupaten?.Code == selectedKabupaten?.Code &&
+            h.Kecamatan?.Code == selectedKecamatan?.Code &&
+            h.Kelurahan?.Code == selectedKelurahan?.Code);
+        if (isDuplicate) return;
+
+        _searchHistory.Insert(0, new SearchHistoryEntry(
+            selectedProvinsi,
+            selectedKabupaten,
+            selectedKecamatan,
+            selectedKelurahan,
+            DateTime.Now));
+
+        // Batasi maksimal 5 entri
+        if (_searchHistory.Count > MaxHistoryEntries)
+            _searchHistory.RemoveAt(_searchHistory.Count - 1);
+    }
+
+    private async Task RestoreHistory(SearchHistoryEntry entry)
+    {
+        // Reset semua state
+        ResetAll();
+
+        // Pulihkan Provinsi
+        if (entry.Provinsi != null)
+        {
+            selectedProvinsi = entry.Provinsi;
+            isLoadingKabupaten = true;
+            StateHasChanged();
+            kabupatenList = await WilayahService.GetKabupatenAsync(entry.Provinsi.Code);
+            isLoadingKabupaten = false;
+        }
+
+        // Pulihkan Kabupaten
+        if (entry.Kabupaten != null && entry.Provinsi != null)
+        {
+            selectedKabupaten = entry.Kabupaten;
+            isLoadingKecamatan = true;
+            StateHasChanged();
+            kecamatanList = await WilayahService.GetKecamatanAsync(entry.Kabupaten.Code);
+            isLoadingKecamatan = false;
+        }
+
+        // Pulihkan Kecamatan
+        if (entry.Kecamatan != null && entry.Kabupaten != null)
+        {
+            selectedKecamatan = entry.Kecamatan;
+            isLoadingKelurahan = true;
+            StateHasChanged();
+            kelurahanList = await WilayahService.GetKelurahanAsync(entry.Kecamatan.Code);
+            isLoadingKelurahan = false;
+        }
+
+        // Pulihkan Kelurahan
+        if (entry.Kelurahan != null)
+            selectedKelurahan = entry.Kelurahan;
+    }
+
+    private void ClearHistory() => _searchHistory.Clear();
+
+    private static string BuildHistoryPath(SearchHistoryEntry e)
+    {
+        var parts = new List<string>();
+        if (e.Provinsi != null) parts.Add(e.Provinsi.Name);
+        if (e.Kabupaten != null) parts.Add(e.Kabupaten.Name);
+        if (e.Kecamatan != null) parts.Add(e.Kecamatan.Name);
+        if (e.Kelurahan != null) parts.Add(e.Kelurahan.Name);
+        return string.Join(" › ", parts);
+    }
+
+    private static string FormatHistoryTime(DateTime dt)
+    {
+        var diff = DateTime.Now - dt;
+        if (diff.TotalSeconds < 60) return "Baru saja";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} menit lalu";
+        if (diff.TotalHours < 24)   return $"{(int)diff.TotalHours} jam lalu";
+        return dt.ToString("dd MMM yyyy", System.Globalization.CultureInfo.GetCultureInfo("id-ID"));
     }
 
     // === Search Strings (per-dropdown) ===
@@ -535,6 +667,7 @@ else
         selectedKelurahan = item;
         searchKelurahan = "";
         showKelurahan = false;
+        SaveToHistory();
     }
 
     // === Dropdown Toggle ===
