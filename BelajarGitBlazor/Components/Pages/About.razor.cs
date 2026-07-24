@@ -13,6 +13,13 @@ public partial class About : ComponentBase
     };
 
     private bool _isChartVisible = false;
+    private bool _isStatsVisible = false;
+
+    // State untuk counter animasi
+    private int _statProvinsi = 0;
+    private int _statKabupaten = 0;
+    private int _statKecamatan = 0;
+    private int _statKelurahan = 0;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -20,8 +27,43 @@ public partial class About : ComponentBase
         {
             await Task.Delay(300);
             _isChartVisible = true;
+            _isStatsVisible = true;
             StateHasChanged();
+            
+            // Jalankan animasi angka
+            await AnimateStats();
         }
+    }
+
+    private async Task AnimateStats()
+    {
+        int steps = 20;
+        int targetProvinsi = 38;
+        int targetKabupaten = 514;
+        int targetKecamatan = 7277;
+        int targetKelurahan = 83931;
+
+        for (int i = 1; i <= steps; i++)
+        {
+            _statProvinsi = (int)Math.Round((double)targetProvinsi * i / steps);
+            _statKabupaten = (int)Math.Round((double)targetKabupaten * i / steps);
+            _statKecamatan = (int)Math.Round((double)targetKecamatan * i / steps);
+            _statKelurahan = (int)Math.Round((double)targetKelurahan * i / steps);
+            
+            StateHasChanged();
+            await Task.Delay(40);
+        }
+        
+        // Pastikan angka target akhir presisi
+        _statProvinsi = targetProvinsi;
+        _statKabupaten = targetKabupaten;
+        _statKecamatan = targetKecamatan;
+        _statKelurahan = targetKelurahan;
+        
+        // Hilangkan efek pop setelah 300ms
+        await Task.Delay(300);
+        _isStatsVisible = false;
+        StateHasChanged();
     }
 
     private string GetBarWidth(int value)
