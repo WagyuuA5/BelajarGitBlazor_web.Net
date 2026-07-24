@@ -2,6 +2,7 @@ using BelajarGitBlazor.Services;
 using BelajarGitBlazor.Components;
 using Microsoft.EntityFrameworkCore;
 using BelajarGitBlazor.Data;
+using BelajarGitBlazor.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
