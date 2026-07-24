@@ -4,14 +4,18 @@ public class AuthService
 {
     private readonly List<UserRecord> _users = new()
     {
-        new UserRecord("Admin", "admin@belajargit.dev", BCryptHash("Admin@123")),
-        new UserRecord("Demo User", "demo@belajargit.dev", BCryptHash("Demo@1234")),
+        new UserRecord("Admin", "admin@belajargit.dev", BCryptHash("Admin@123"), "Admin"),
+        new UserRecord("Demo User", "demo@belajargit.dev", BCryptHash("Demo@1234"), "User"),
     };
 
     private UserRecord? _currentUser;
 
     public UserRecord? CurrentUser => _currentUser;
     public bool IsAuthenticated => _currentUser is not null;
+    public bool IsAdmin => _currentUser?.Role == "Admin";
+    public string? UserRole => _currentUser?.Role;
+
+    public event Action? OnAuthStateChanged;
 
     public Task<AuthResult> LoginAsync(string email, string password)
     {
@@ -25,6 +29,7 @@ public class AuthService
             return Task.FromResult(new AuthResult(false, "Password salah."));
 
         _currentUser = user;
+        NotifyAuthStateChanged();
         return Task.FromResult(new AuthResult(true, "Login berhasil!"));
     }
 
@@ -33,13 +38,20 @@ public class AuthService
         if (_users.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
             return Task.FromResult(new AuthResult(false, "Email sudah terdaftar."));
 
-        var newUser = new UserRecord(name, email, BCryptHash(password));
+        var newUser = new UserRecord(name, email, BCryptHash(password), "User");
         _users.Add(newUser);
         _currentUser = newUser;
+        NotifyAuthStateChanged();
         return Task.FromResult(new AuthResult(true, "Registrasi berhasil! Selamat datang."));
     }
 
-    public void Logout() => _currentUser = null;
+    public void Logout()
+    {
+        _currentUser = null;
+        NotifyAuthStateChanged();
+    }
+
+    private void NotifyAuthStateChanged() => OnAuthStateChanged?.Invoke();
 
     private static string BCryptHash(string plain) =>
         Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(plain + "_salted"));
@@ -47,6 +59,6 @@ public class AuthService
     private static bool VerifyHash(string plain, string hash) =>
         BCryptHash(plain) == hash;
 
-    public record UserRecord(string Name, string Email, string PasswordHash);
+    public record UserRecord(string Name, string Email, string PasswordHash, string Role);
     public record AuthResult(bool Success, string Message);
 }

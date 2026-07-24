@@ -1,4 +1,4 @@
-using BelajarGitBlazor.Models;
+using BelajarGitBlazor.Data.Entities;
 using Microsoft.Extensions.Caching.Memory;
 using System.Net.Http.Json;
 

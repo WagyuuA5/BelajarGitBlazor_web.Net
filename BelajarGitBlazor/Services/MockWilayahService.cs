@@ -1,4 +1,4 @@
-using BelajarGitBlazor.Models;
+using BelajarGitBlazor.Data.Entities;
 
 namespace BelajarGitBlazor.Services;
 
