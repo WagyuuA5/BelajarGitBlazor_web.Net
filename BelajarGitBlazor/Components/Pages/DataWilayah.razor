@@ -3,7 +3,7 @@
 @inject IWilayahService WilayahService
 @inject IJSRuntime JS
 @using BelajarGitBlazor.Services
-@using BelajarGitBlazor.Models
+@using BelajarGitBlazor.Data.Entities
 
 <PageTitle>WilayahKu – Direktori Wilayah Indonesia</PageTitle>
 
@@ -285,6 +285,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
             <h2 style="margin: 0; font-size: 1.15rem;">Kode Wilayah Terpilih</h2>
         </div>
+
         <div class="table-wrapper">
             <table class="table">
                 <thead>
@@ -733,9 +734,6 @@ else
     }
 
     // === Filter ===
-    // Menggabungkan global search + per-dropdown search:
-    // item lolos jika cocok dengan keduanya (AND), sehingga search bar global
-    // mempersempit pilihan, bukan menimpa filter per-dropdown.
     private WilayahItem[] FilterList(WilayahItem[] list, string search)
     {
         var combined = string.IsNullOrWhiteSpace(globalSearch)

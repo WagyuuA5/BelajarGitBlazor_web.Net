@@ -1,4 +1,4 @@
-namespace BelajarGitBlazor.Models;
+namespace BelajarGitBlazor.Data.Entities;
 
 public class WilayahItem
 {

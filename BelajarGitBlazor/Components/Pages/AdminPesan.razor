@@ -1,0 +1,167 @@
+@page "/admin/pesan"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using BelajarGitBlazor.Data.Entities
+@using BelajarGitBlazor.Data
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext DbContext
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Pesan Masuk – Admin WilayahKu</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1>Pesan Masuk</h1>
+        <p>Kelola semua pesan yang masuk dari pengguna WilayahKu.</p>
+    </div>
+    @if (_pesanBelumDibaca > 0)
+    {
+        <div class="admin-badge-notif">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            @_pesanBelumDibaca pesan belum dibaca
+        </div>
+    }
+</div>
+
+@if (_isLoading)
+{
+    <div style="text-align: center; padding: 40px;">
+        <span class="spinner" style="width: 32px; height: 32px;"></span>
+        <p style="margin-top: 12px; color: var(--text-muted);">Memuat pesan...</p>
+    </div>
+}
+else if (_pesanList.Count == 0)
+{
+    <div class="wilayah-empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <h3>Belum Ada Pesan</h3>
+        <p>Pesan dari pengguna akan tampil di sini.</p>
+    </div>
+}
+else
+{
+    <div class="wilayah-result-card">
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nama Pengirim</th>
+                        <th>Email</th>
+                        <th>Cuplikan Pesan</th>
+                        <th>Waktu Kirim</th>
+                        <th style="text-align: center;">Status</th>
+                        <th style="text-align: center; width: 200px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pesan in _pesanList)
+                    {
+                        <tr style="@(!pesan.IsRead ? "font-weight: 600;" : "")">
+                            <td>@pesan.SenderName</td>
+                            <td style="font-size: 0.9rem; color: var(--text-muted);">@pesan.SenderEmail</td>
+                            <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                @(pesan.Content.Length > 60 ? pesan.Content[..60] + "..." : pesan.Content)
+                            </td>
+                            <td style="font-size: 0.85rem; color: var(--text-muted);">@FormatWaktu(pesan.CreatedAt)</td>
+                            <td style="text-align: center;">
+                                @if (!pesan.IsRead)
+                                {
+                                    <span class="badge" style="background: rgba(239,68,68,0.12); color: #ef4444;">Belum Dibaca</span>
+                                }
+                                else
+                                {
+                                    <span class="badge" style="background: rgba(234,179,8,0.12); color: #ca8a04;">Sudah Dibaca</span>
+                                }
+                            </td>
+                            <td style="text-align: center;">
+                                <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
+                                    @if (!pesan.IsRead)
+                                    {
+                                        <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem;"
+                                                @onclick="() => TandaiDibaca(pesan.Id)" disabled="@_isUpdating">
+                                            Tandai Dibaca
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+
+                        @* Detail pesan saat diklik *@
+                        @if (_expandedPesanId == pesan.Id)
+                        {
+                            <tr>
+                                <td colspan="6" style="background: var(--card-bg); padding: 16px 20px; border-radius: 8px;">
+                                    <strong>Isi Pesan Lengkap:</strong>
+                                    <p style="margin: 8px 0 0; white-space: pre-wrap;">@pesan.Content</p>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <p style="margin-top: 12px; font-size: 0.85rem; color: var(--text-muted);">
+        Klik baris pesan untuk melihat detail lengkap.
+    </p>
+}
+
+@code {
+    private List<Message> _pesanList = new();
+    private int _pesanBelumDibaca;
+    private bool _isLoading = true;
+    private bool _isUpdating = false;
+    private int? _expandedPesanId = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Guard: jika bukan admin, redirect ke home
+        if (!AuthService.IsAdmin)
+        {
+            NavigationManager.NavigateTo("/", replace: true);
+            return;
+        }
+
+        await MuatData();
+    }
+
+    private async Task MuatData()
+    {
+        _isLoading = true;
+        _pesanList = await DbContext.Messages.OrderByDescending(p => p.CreatedAt).ToListAsync();
+        _pesanBelumDibaca = await DbContext.Messages.CountAsync(p => !p.IsRead);
+        _isLoading = false;
+    }
+
+    private async Task TandaiDibaca(int id)
+    {
+        _isUpdating = true;
+        var pesan = await DbContext.Messages.FindAsync(id);
+        if (pesan != null)
+        {
+            pesan.IsRead = true;
+            await DbContext.SaveChangesAsync();
+        }
+        await MuatData();
+        _isUpdating = false;
+    }
+
+    private void ToggleDetail(int id)
+    {
+        _expandedPesanId = _expandedPesanId == id ? null : id;
+    }
+
+    private static string FormatWaktu(DateTime dt)
+    {
+        // Because CreatedAt is UTC, we convert to local for display
+        var localTime = dt.ToLocalTime();
+        var diff = DateTime.Now - localTime;
+        if (diff.TotalMinutes < 1) return "Baru saja";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} menit lalu";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours} jam lalu";
+        return localTime.ToString("dd MMM yyyy, HH:mm", System.Globalization.CultureInfo.GetCultureInfo("id-ID"));
+    }
+}

@@ -1,52 +1,72 @@
+using BelajarGitBlazor.Data;
+using BelajarGitBlazor.Data.Entities;
+using Microsoft.EntityFrameworkCore;
+
 namespace BelajarGitBlazor.Services;
 
 public class AuthService
 {
-    private readonly List<UserRecord> _users = new()
+    private readonly AppDbContext _context;
+
+    public AuthService(AppDbContext context)
     {
-        new UserRecord("Admin", "admin@belajargit.dev", BCryptHash("Admin@123")),
-        new UserRecord("Demo User", "demo@belajargit.dev", BCryptHash("Demo@1234")),
-    };
+        _context = context;
+    }
 
-    private UserRecord? _currentUser;
+    private User? _currentUser;
 
-    public UserRecord? CurrentUser => _currentUser;
+    public User? CurrentUser => _currentUser;
     public bool IsAuthenticated => _currentUser is not null;
+    public bool IsAdmin => _currentUser?.Role == "Admin";
+    public string? UserRole => _currentUser?.Role;
 
-    public Task<AuthResult> LoginAsync(string email, string password)
+    public event Action? OnAuthStateChanged;
+
+    public async Task<AuthResult> LoginAsync(string username, string password)
     {
-        var user = _users.FirstOrDefault(u =>
-            u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower());
 
-        if (user is null)
-            return Task.FromResult(new AuthResult(false, "Email tidak ditemukan."));
+        if (user == null)
+            return new AuthResult(false, "Username tidak ditemukan.", null);
 
-        if (!VerifyHash(password, user.PasswordHash))
-            return Task.FromResult(new AuthResult(false, "Password salah."));
+        if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+            return new AuthResult(false, "Password salah.", null);
 
         _currentUser = user;
-        return Task.FromResult(new AuthResult(true, "Login berhasil!"));
+        NotifyAuthStateChanged();
+        return new AuthResult(true, "Login berhasil!", user);
     }
 
-    public Task<AuthResult> RegisterAsync(string name, string email, string password)
+    public async Task<AuthResult> RegisterAsync(string username, string password)
     {
-        if (_users.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
-            return Task.FromResult(new AuthResult(false, "Email sudah terdaftar."));
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            return new AuthResult(false, "Username dan password tidak boleh kosong.", null);
 
-        var newUser = new UserRecord(name, email, BCryptHash(password));
-        _users.Add(newUser);
+        if (await _context.Users.AnyAsync(u => u.Username.ToLower() == username.ToLower()))
+            return new AuthResult(false, "Username sudah terdaftar.", null);
+
+        var newUser = new User
+        {
+            Username = username,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+            Role = "User"
+        };
+
+        _context.Users.Add(newUser);
+        await _context.SaveChangesAsync();
+
         _currentUser = newUser;
-        return Task.FromResult(new AuthResult(true, "Registrasi berhasil! Selamat datang."));
+        NotifyAuthStateChanged();
+        return new AuthResult(true, "Registrasi berhasil!", newUser);
     }
 
-    public void Logout() => _currentUser = null;
+    public void Logout()
+    {
+        _currentUser = null;
+        NotifyAuthStateChanged();
+    }
 
-    private static string BCryptHash(string plain) =>
-        Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(plain + "_salted"));
-
-    private static bool VerifyHash(string plain, string hash) =>
-        BCryptHash(plain) == hash;
-
-    public record UserRecord(string Name, string Email, string PasswordHash);
-    public record AuthResult(bool Success, string Message);
+    private void NotifyAuthStateChanged() => OnAuthStateChanged?.Invoke();
 }
+
+public record AuthResult(bool Success, string Message, User? User);

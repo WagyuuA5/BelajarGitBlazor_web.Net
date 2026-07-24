@@ -1,4 +1,4 @@
-using BelajarGitBlazor.Models;
+using BelajarGitBlazor.Data.Entities;
 using Microsoft.Extensions.Caching.Memory;
 using System.Net.Http.Json;
 
@@ -21,7 +21,7 @@ public class WilayahService : IWilayahService
         const string cacheKey = "provinsi_list";
         if (!_cache.TryGetValue(cacheKey, out WilayahItem[]? list) || list == null)
         {
-            var response = await _http.GetFromJsonAsync<WilayahResponse>("api/provinces.json");
+            var response = await _http.GetFromJsonAsync<WilayahResponse>("https://wilayah.id/api/provinces.json");
             list = response?.Data ?? Array.Empty<WilayahItem>();
             _cache.Set(cacheKey, list, CacheDuration);
         }
@@ -33,7 +33,7 @@ public class WilayahService : IWilayahService
         string cacheKey = $"kabupaten_{provinsiCode}";
         if (!_cache.TryGetValue(cacheKey, out WilayahItem[]? list) || list == null)
         {
-            var response = await _http.GetFromJsonAsync<WilayahResponse>($"api/regencies/{provinsiCode}.json");
+            var response = await _http.GetFromJsonAsync<WilayahResponse>($"https://wilayah.id/api/regencies/{provinsiCode}.json");
             list = response?.Data ?? Array.Empty<WilayahItem>();
             _cache.Set(cacheKey, list, CacheDuration);
         }
@@ -45,7 +45,7 @@ public class WilayahService : IWilayahService
         string cacheKey = $"kecamatan_{kabupatenCode}";
         if (!_cache.TryGetValue(cacheKey, out WilayahItem[]? list) || list == null)
         {
-            var response = await _http.GetFromJsonAsync<WilayahResponse>($"api/districts/{kabupatenCode}.json");
+            var response = await _http.GetFromJsonAsync<WilayahResponse>($"https://wilayah.id/api/districts/{kabupatenCode}.json");
             list = response?.Data ?? Array.Empty<WilayahItem>();
             _cache.Set(cacheKey, list, CacheDuration);
         }
@@ -57,7 +57,7 @@ public class WilayahService : IWilayahService
         string cacheKey = $"kelurahan_{kecamatanCode}";
         if (!_cache.TryGetValue(cacheKey, out WilayahItem[]? list) || list == null)
         {
-            var response = await _http.GetFromJsonAsync<WilayahResponse>($"api/villages/{kecamatanCode}.json");
+            var response = await _http.GetFromJsonAsync<WilayahResponse>($"https://wilayah.id/api/villages/{kecamatanCode}.json");
             list = response?.Data ?? Array.Empty<WilayahItem>();
             _cache.Set(cacheKey, list, CacheDuration);
         }
