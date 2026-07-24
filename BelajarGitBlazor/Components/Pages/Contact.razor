@@ -1,5 +1,8 @@
 @page "/contact"
 @rendermode InteractiveServer
+@using BelajarGitBlazor.Data
+@using BelajarGitBlazor.Models
+@inject AppDbContext DbContext
 
 <PageTitle>Hubungi Kami – BelajarGitBlazor</PageTitle>
 
@@ -16,7 +19,7 @@
         {
             <div class="alert alert-success">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                Pesan berhasil dikirim! Kami akan membalas secepatnya.
+                Pesan berhasil dikirim! Admin kami akan membacanya secepatnya.
             </div>
             <button class="btn btn-outline" @onclick="() => _isSent = false" style="margin-top: 10px;">Kirim pesan baru</button>
         }
@@ -101,7 +104,19 @@
             return;
 
         _isLoading = true;
-        await Task.Delay(1000); 
+        
+        var newMessage = new Message
+        {
+            SenderName = _name,
+            SenderEmail = _email,
+            Content = _message,
+            CreatedAt = DateTime.UtcNow,
+            IsRead = false
+        };
+        
+        DbContext.Messages.Add(newMessage);
+        await DbContext.SaveChangesAsync();
+        
         _isLoading = false;
         _isSent = true;
         
